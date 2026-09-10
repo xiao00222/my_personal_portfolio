@@ -101,7 +101,7 @@ export const Hero = () => {
                 </Button>
               </a>
               <a
-                href="/Farhan_Ali_Dotnet_dev1.pdf"
+                href="/Farhan_Ali_dotnet_dev1.pdf"
                 target="_blank"
                 rel="noopener noreferrer"
               >
