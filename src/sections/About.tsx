@@ -67,12 +67,6 @@ export function About() {
                     <p key={paragraph.slice(0, 24)}>{paragraph}</p>
                   ))}
                 </div>
-
-                <blockquote className="mt-8 border-l-2 border-signal pl-5">
-                  <p className="font-display text-lg italic leading-snug text-ink sm:text-xl">
-                    {about.quote}
-                  </p>
-                </blockquote>
               </div>
 
               <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
