@@ -1,17 +1,44 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Farhan Ali Portfolio</title>
+
+    <!-- Primary meta (kept in sync with src/data/portfolio.ts -> seo) -->
+    <title>Farhan Ali — .NET / C# Software Engineer</title>
+    <meta
+      name="description"
+      content="Farhan Ali — software engineer specializing in ASP.NET Core, EF Core, and Clean Architecture, with hands-on experience building scalable applications."
+    />
+    <meta name="author" content="Farhan Ali" />
+    <meta name="theme-color" content="#0a0c11" />
+    <meta name="color-scheme" content="dark" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Farhan Ali — .NET / C# Software Engineer" />
+    <meta
+      property="og:description"
+      content="Building reliable backends with clean architecture. ASP.NET Core, EF Core, CQRS, and applied AI."
+    />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Farhan Ali — .NET / C# Software Engineer" />
+    <meta
+      name="twitter:description"
+      content="Building reliable backends with clean architecture. ASP.NET Core, EF Core, CQRS, and applied AI."
+    />
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
