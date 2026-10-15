@@ -26,3 +26,4 @@ Thumbs.db
 
 # Read by Vite for local, git-ignored overrides
 *.local.ts
+README.md
