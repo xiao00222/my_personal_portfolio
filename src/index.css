@@ -367,9 +367,7 @@
 @layer utilities {
   .beam-sweep {
     animation: beam-sweep 14s ease-in-out infinite;
-  }
-
-  .animate-lightning {
+  }      .animate-lightning {
     animation: lightning 1.1s ease-out;
   }
 
@@ -380,18 +378,43 @@
 }
 
 /* ---------------------------------------------------------------------------
- * Reduced motion: kill decorative animation, keep everything readable.
+ * Decorative motion gate: the single place animation is turned off.
+ *
+ * Durations are zeroed rather than animations removed, because the element then
+ * keeps its final resting state and the reduced render stays complete and
+ * readable — nothing is left stranded mid-entrance.
+ *
+ * The gate keys off `<html data-motion>`, which `src/lib/motionPreference.ts`
+ * keeps in step with both inputs: the operating system setting and the
+ * visitor's own choice from the navbar control. A media query alone can never
+ * be overridden from inside the page, so it is only half the condition — it
+ * still decides the outcome whenever the attribute says nothing (script not
+ * yet run, script failed, CSS-only context).
  * ------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
-  html {
+  html:not([data-motion="full"]) {
     scroll-behavior: auto;
   }
 
-  *,
-  *::before,
-  *::after {
+  html:not([data-motion="full"]) *,
+  html:not([data-motion="full"]) *::before,
+  html:not([data-motion="full"]) *::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+/* The visitor asked for motion to stop from inside the page, against a system
+   setting that would have allowed it. */
+html[data-motion="reduced"] {
+  scroll-behavior: auto;
+}
+
+html[data-motion="reduced"] *,
+html[data-motion="reduced"] *::before,
+html[data-motion="reduced"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
 }

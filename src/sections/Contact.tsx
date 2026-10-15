@@ -100,7 +100,7 @@ export function Contact() {
             <div className="panel rounded-2xl p-5 sm:p-7">
               <p className="flex items-center gap-3 font-mono text-[0.68rem] uppercase tracking-[0.22em] text-ink">
                 <span className="relative flex h-2.5 w-2.5">
-                  <span className="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-60 motion-safe:animate-ping" />
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-60 animate-ping" />
                   <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-green-400" />
                 </span>
                 {profile.availability}

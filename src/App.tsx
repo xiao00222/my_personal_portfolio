@@ -81,7 +81,13 @@ export default function App() {
           activeId={activeSection}
           ctaLabel={portfolio.hero.primaryCta.label}
           ctaId={portfolio.hero.primaryCta.target}
-          soundLabels={{ on: portfolio.ui.labels.soundOn, off: portfolio.ui.labels.soundOff }}
+          motionLabels={{
+            on: portfolio.ui.labels.motionOn,
+            off: portfolio.ui.labels.motionOff,
+            followsSystem: portfolio.ui.labels.motionFollowsSystem,
+            chosenHere: portfolio.ui.labels.motionChosenHere,
+            hint: portfolio.ui.labels.motionHint,
+          }}
           labels={{ menu: portfolio.ui.labels.menu, close: portfolio.ui.labels.closeMenu }}
         />
 

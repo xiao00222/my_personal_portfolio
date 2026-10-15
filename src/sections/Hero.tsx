@@ -200,7 +200,7 @@ export function Hero() {
           className="mt-10 inline-flex items-center gap-3 font-mono text-[0.68rem] uppercase tracking-[0.3em] text-ash transition-colors hover:text-signal"
         >
           {ui.labels.scroll}
-          <ArrowDown className="h-4 w-4 motion-safe:animate-bounce" aria-hidden="true" />
+          <ArrowDown className="h-4 w-4 animate-bounce" aria-hidden="true" />
         </a>
       </motion.div>
     </section>

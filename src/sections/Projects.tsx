@@ -109,11 +109,11 @@ export function Projects() {
                         {project.projectNumber}
                       </span>
 
-                      {project.images.length > 1 && (
+                      {/* {project.images.length > 1 && (
                         <span className="absolute right-4 top-4 rounded-full border border-gotham-600 bg-gotham-950/80 px-3 py-1 font-mono text-[0.62rem] uppercase tracking-[0.2em] text-ash">
                           {project.images.length} screenshots
                         </span>
-                      )}
+                      )} */}
                     </div>
 
                     <div className="flex flex-1 flex-col gap-4 p-5 sm:p-6">
@@ -282,7 +282,7 @@ function CardAction({
         "font-mono text-[0.62rem] uppercase tracking-[0.18em] text-ash",
         "transition-[transform,border-color,color,box-shadow] duration-300 ease-out",
         "hover:-translate-y-0.5 hover:border-signal hover:text-signal hover:shadow-[0_0_24px_-6px_color-mix(in_srgb,var(--color-signal)_70%,transparent)]",
-        "motion-safe:active:translate-y-0",
+        "active:translate-y-0",
       )}
     >
       {/* Signal wipe that slides in from the left on hover. */}

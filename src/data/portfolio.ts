@@ -88,7 +88,12 @@ export interface About {
   headlineAccent: string;
   /** Bio paragraphs, verbatim from About.jsx. */
   paragraphs: string[];
-  /** Pull-quote under the bio, verbatim from About.jsx. */
+  /**
+   * Pull-quote under the bio, verbatim from About.jsx. Optional: the About
+   * section lays out without it when there is no quote to show, so an empty
+   * field leaves no stray rule behind.
+   */
+  quote?: string;
   highlights: AboutHighlight[];
   /** Header-metadata chrome for the profile card. */
   dossier: {
@@ -155,13 +160,6 @@ export interface TimelineEntry {
   current: boolean;
 }
 
-export interface Certification {
-  title: string;
-  issuer: string;
-  year: string;
-  url: string | null;
-}
-
 export interface ContactInfo {
   label: string;
   value: string;
@@ -199,8 +197,12 @@ export interface UIStrings {
     /** Presentation chrome for the hero technology index (not biography). */
     techManifest: string;
     techManifestId: string;
-    soundOn: string;
-    soundOff: string;
+    /** Motion control: state label, then the hint naming what is deciding. */
+    motionOn: string;
+    motionOff: string;
+    motionFollowsSystem: string;
+    motionChosenHere: string;
+    motionHint: string;
   };
   contact: {
     heading: string;
@@ -229,8 +231,6 @@ export interface Portfolio {
   skills: SkillCategory[];
   projects: Project[];
   timeline: TimelineEntry[];
-  /** TODO: no certifications exist in the original site or CV. */
-  certifications: Certification[];
   contactInfo: ContactInfo[];
   ui: UIStrings;
 }
@@ -579,13 +579,6 @@ export const portfolio: Portfolio = {
     },
   ],
 
-  /**
-   * TODO: The original portfolio and the CV both list NO certifications.
-   * This array is intentionally empty — add entries here to render the
-   * "Credentials" strip (the UI hides itself while it is empty).
-   */
-  certifications: [],
-
   contactInfo: [
     {
       label: "Email",
@@ -652,8 +645,13 @@ export const portfolio: Portfolio = {
       /** Presentation chrome for the hero technology index (not biography). */
       techManifest: "Core technologies",
       techManifestId: "TECH-INDEX",
-      soundOn: "Sound on",
-      soundOff: "Sound off",
+      /* Motion control. The site follows the operating system's
+         reduced-motion setting until the visitor decides otherwise here. */
+      motionOn: "Animations on",
+      motionOff: "Animations off",
+      motionFollowsSystem: "matching your system setting",
+      motionChosenHere: "set for this site",
+      motionHint: "Click to switch.",
     },
     contact: {
       heading: "Contact Me",

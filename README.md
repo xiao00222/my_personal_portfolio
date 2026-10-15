@@ -42,7 +42,6 @@ The file is split into typed sections, each with an interface:
 | `skills` | `SkillCategory[]` | Skill categories and technologies |
 | `projects` | `Project[]` | Case-file cards **and** the detail modals |
 | `timeline` | `TimelineEntry[]` | Service-record timeline |
-| `certifications` | `Certification[]` | Currently empty — renders nothing (see gaps) |
 | `contactInfo` | `ContactInfo[]` | Contact channels |
 | `ui` | `UIStrings` | All interface chrome (section titles, labels, boot lines) |
 
@@ -92,6 +91,7 @@ src/
 │  ├─ CustomCursor.tsx     reticle cursor (fine-pointer only)
 │  ├─ Footer.tsx           minimal footer + signal-flare back-to-top
 │  ├─ GlitchText.tsx       scramble-in headings
+│  ├─ MotionToggle.tsx     navbar control that overrides reduced motion
 │  ├─ Navbar.tsx           sticky nav, active section, animated mobile menu
 │  ├─ ProjectImage.tsx     screenshot with shimmer placeholder + fade-in
 │  ├─ ProjectModal.tsx     accessible project detail dialog
@@ -100,7 +100,6 @@ src/
 │  ├─ ScrollProgress.tsx   top progress rail with a bat marker
 │  ├─ SectionHeading.tsx   shared eyebrow/title/description block
 │  ├─ Skyline.tsx          deterministic parallax Gotham skyline
-│  ├─ SoundToggle.tsx      optional WebAudio ambience (OFF by default)
 │  ├─ Spotlight.tsx        composited flashlight pool (no per-frame repaint)
 │  └─ TiltCard.tsx         pointer-driven 3D tilt
 ├─ data/portfolio.ts       ← SINGLE SOURCE OF TRUTH for all content
@@ -108,12 +107,14 @@ src/
 │  ├─ useActiveSection.ts  IntersectionObserver nav highlighting
 │  ├─ useInViewOnce.ts     one-shot in-view detection
 │  ├─ useMediaQuery.ts     matchMedia + fine-pointer helper
-│  ├─ usePrefersReducedMotion.ts
+│  ├─ useMotionChoice.ts   the visitor's stored motion override
+│  ├─ usePrefersReducedMotion.ts  resolved preference (OS + override)
 │  ├─ useScrollProgress.ts rAF-throttled scroll progress
 │  ├─ useSessionOnce.ts    sessionStorage "show once per session"
 │  └─ useSpotlightCursor.ts binds an element to the shared cursor engine
 ├─ lib/                    cn(), seeded RNG, icon maps, motion variants, SEO
-│  └─ cursor.ts            one shared pointer listener + rAF loop (see below)
+│  ├─ cursor.ts            one shared pointer listener + rAF loop (see below)
+│  └─ motionPreference.ts  motion policy: OS setting + in-page override
 ├─ sections/               Hero, About, Skills, Projects, Experience, Contact
 ├─ App.tsx                 composition root (boot gate, nav, sections, layers)
 ├─ index.css               Tailwind v4 theme tokens, fonts, keyframes
@@ -193,7 +194,6 @@ screenshots and the JPEG backdrop were re-encoded to WebP/resized (4.7 MB → 11
 - **Glitch/scramble headings** — `GlitchText`, used sparingly (hero name, hero accent, section titles, one closing line). The scrambling copy is `aria-hidden` with a single `sr-only` twin, so headings are announced exactly once.
 - **Sticky nav** — transparent → blurred on scroll, active-section highlighting via a sliding `layoutId` pill driven by an IntersectionObserver band, plus an animated mobile panel.
 - **3D tilt** — project cards tilt toward the pointer with a sheen; transform written directly to the node, no state. Only the snap-back on pointer-leave is transitioned — transitioning the follow transform too makes the card chase the cursor (see [Performance notes](#performance-notes)).
-- **Sound** — optional and **OFF by default**. Synthesised with the Web Audio API (sub-bass drone + filtered noise rain), so **no audio files are required** and none ship.
 
 ### ★ The standout wow moment: the scroll-reactive signal beam
 
@@ -231,6 +231,22 @@ animations/transitions under `@media (prefers-reduced-motion: reduce)`:
 
 The result is a **complete, readable static page**, not a broken one.
 
+**One gate, and the visitor can move it.** Both inputs — the OS setting and the navbar's
+zap button — resolve to a single answer, which `src/lib/motionPreference.ts` mirrors onto
+`<html data-motion="full|reduced">`. `index.css` keys its "zero every duration" rule off
+that attribute rather than a bare media query, which is what makes an in-page override
+possible at all (a media query cannot be overridden from inside the document); a context
+with no script still falls back to the OS setting, because the attribute is then absent.
+The choice is remembered in `localStorage` (`gc-motion-choice`), shared across tabs, and
+**announced honestly** — the tooltip says whether motion is *matching your system setting*
+or *set for this site*, so nobody is left guessing why the page is still or why it moves.
+
+The control exists for a specific, common situation: the OS setting is often a side effect
+of something the visitor never connected to this page — **Windows reports
+`prefers-reduced-motion: reduce` whenever "Animation effects" is switched off** — and a
+media query gives them no way to say "not here". Someone who genuinely wants a still page
+and never touches the control keeps exactly the reduced render described above.
+
 ---
 
 ## Accessibility
@@ -240,7 +256,7 @@ The result is a **complete, readable static page**, not a broken one.
 - No information is conveyed by animation or colour alone — the current timeline entry also reads "Currently", projects without a link say "Source code private for now", and section state is text.
 - Accessible names are built from each element's own content, never an `aria-label` override: the card actions read "Live demo — SyncUp" / "Source code — SyncUp". A Lighthouse run caught an earlier version failing **WCAG 2.5.3 (Label in Name)** because its `aria-label` ("Open source repository: SyncUp") did not contain the visible text ("SOURCE CODE") — a voice-control user saying "click source code" would have found no such control. There are now **zero binary accessibility failures**.
 - All images have `alt` text (decorative layers are `aria-hidden`).
-- Live regions: `aria-live` on the skills detail readout.
+- Live regions: `role="status"` + `aria-live="polite"` on the boot overlay, which is the only thing that changes without the visitor acting. The skills readout no longer carries one, because it only changes in response to a filter click.
 - Every `aria-labelledby` on a section points at a real element: `SectionHeading` now takes a `headingId` and puts it on the `<h2>`, which it previously never did — those references were dangling IDREFs.
 
 ---
@@ -313,8 +329,8 @@ favicons.
 These are marked `TODO` in [`src/data/portfolio.ts`](src/data/portfolio.ts) and nothing was invented to fill them:
 
 1. **No profile photo.** `profile.photo` is `null`. The hero and dossier use a monogram/abstract treatment instead. Drop a photo into `src/assets/` and set `photo` to switch.
-2. **No certifications.** `portfolio.certifications` is `[]` — the timeline shows an explicit "Certifications — none listed in the source content" note and renders no fake entries.
-3. **No skill proficiency levels.** The source has no levels or percentages anywhere, so **no percentages or progress bars are shown**. The Skills panel states this in plain text.
+2. **No skill proficiency levels.** The source has no levels or percentages anywhere, so **no percentages or progress bars are shown** — the skills readout lists technologies and nothing more.
+3. **No certifications.** The original site and the CV list none, so nothing is invented. (An earlier placeholder note saying so was removed from the page on request — item 17 in the verification log.)
 4. **Formoptix has no live demo and no public repo.** `liveUrl`/`repoUrl` are `null`; the card renders two muted, non-interactive slots reading "No live demo available" / "Source code private for now", and the dialog repeats it. No link was invented.
 5. **No project dates.** `year` is `null` for all three projects.
 6. **No X/Twitter link.** Your original code imported a `Twitter` icon but never used it; only GitHub and LinkedIn exist, so only those render.
@@ -366,9 +382,9 @@ Section anchors changed, so **any link you had pointing at `#dossier`, `#arsenal
 3. Lighthouse against the production build — scores above. Raw JSON written to `reports/` (kept in the workspace; this folder is not a git repo, so nothing here is committed).
 4. **Content parity, 28 checks** — every checked string was confirmed present in *both* the original folder (`.jsx` files + `pdftotext` of your CV) *and* `portfolio.ts`: 25 exact, 1 formatting variant, 2 spelling normalisations (listed above). Then **21/24 strings confirmed in the rendered DOM**; the other 3 are modal-only content and were confirmed by opening the SwiftShop project dialog (`"Used Ajax and jQuery…"`, the live-demo URL, and the N-Tier highlight all present).
 5. **Responsive layouts measured at 375 / 768 / 1440 px**: no horizontal overflow at any width; project grid 1 col → 2 col; about and contact split at `lg`; desktop nav ⇄ mobile toggle switch at 768; hero `h1` 48 → 72 → 96 px; timeline alternates at `md`; the centred card action row fits inside 375 px (277 px wide) and the technology index reflows 2 → 3 → 4 columns.
-6. **Interactions exercised in a real browser**: intro plays and auto-advances; project dialog opens with focus on Close, traps Tab, closes on `Escape` and restores focus to the card; mobile menu opens with `aria-expanded`, locks scroll, closes on `Escape` and returns focus; the sound toggle flips `aria-pressed`.
+6. **Interactions exercised in a real browser**: intro plays and auto-advances; project dialog opens with focus on Close, traps Tab, closes on `Escape` and restores focus to the card; mobile menu opens with `aria-expanded`, locks scroll, closes on `Escape` and returns focus; the sound toggle flips `aria-pressed` (that control was removed on request later — see item 17).
 7. Verified `prefers-reduced-motion: reduce` end-to-end — the boot intro, rain canvas, tilt and reveals all correctly fall back to a static page.
-8. **Pointer/clicking regression pass** (after the cursor fix): the visible reticle's centre was measured against the pointer and is now offset by **0 px in both axes** (it was 14 px up-and-left). Real clicks were then driven through the browser on the nav links, the Arsenal category filter, a skill chip, the sound toggle, a case-file card (modal opened, focus landed on Close, `Escape` closed it) and the mobile menu at 375 px (opened, navigated, closed, scroll unlocked). Every one landed on its intended target.
+8. **Pointer/clicking regression pass** (after the cursor fix): the visible reticle's centre was measured against the pointer and is now offset by **0 px in both axes** (it was 14 px up-and-left). Real clicks were then driven through the browser on the nav links, the Arsenal category filter, a skill chip, the sound toggle (both since removed — see item 17), a case-file card (modal opened, focus landed on Close, `Escape` closed it) and the mobile menu at 375 px (opened, navigated, closed, scroll unlocked). Every one landed on its intended target.
 9. **Frame-time measurement**: median rAF interval while dispatching a `pointermove` every frame went from **20.8 ms → 6.9 ms**, which is identical to the idle figure and to an empty `<body>` control. The per-frame hover cost is now zero rather than ~14 ms.
 10. **New hero technology index** verified in the live DOM at all three widths: 17 cells, all 17 names present verbatim, 2 columns at 375 px, 3 at 768 px, 4 at 1440 px, no overflow, and the hover utilities confirmed compiled in the stylesheet.
 11. **Card action links** — hit-tested with `elementFromPoint` at each link's centre (all four are the topmost element) **and** clicked with real browser input: a real click on "Source code" landed on the anchor, not the card's details button, and did not open the dialog; a real click on the card body did open the dialog. Formoptix renders two muted, non-interactive slots (it has no URLs in the source).
@@ -377,6 +393,10 @@ Section anchors changed, so **any link you had pointing at `#dossier`, `#arsenal
     Note this covers the CSS-driven animations only. The JS-gated Framer Motion paths (boot intro, scroll reveals, card tilt) read `matchMedia` in React, so deleting the stylesheet rule does **not** re-enable them; those are covered by the limitation below instead of by this test.
 14. **No Batman wording left** — the rendered page text was scanned for `signal the bat`, `batcomputer`, `gotham`, `arsenal`, `case file`, `utility belt`, `commissioner`, `dossier`, `service record`, `transmission console`, `bat-signal`, `field notes`: **zero matches**. Nav reads About / Skills / Projects / Experience with a "Contact Me" CTA; section IDs are `home`, `about`, `skills`, `projects`, `experience`, `contact`.
 15. **Contact form removed** — the rendered contact section contains no `<form>`, and its email link is the topmost element at its own centre (i.e. genuinely clickable).
+16. **In-page motion control** — measured in the running dev server, in both directions, plus persistence and cross-tab sync. Starting clean, the page reported `data-motion="reduced"` with the drift keyframe at `animation-duration: 1e-06s` and no `<canvas>`; after one activation it reported `data-motion="full"`, `animation-duration: 42s`, the rain canvas mounted, and **15 animations running** (`drift-a/b/c`, `beam-sweep`, `pulse`, `bounce`, `ping`, three shimmers, five Framer Motion ones). Motion itself was measured on the animation objects: seeking `drift-a` to its midpoint produced `scale(1.14) translate(34px, −24px)` against an identity matrix at 0%, and `ping` went from `opacity 0.6 / scale 1` to `opacity 0.04 / scale 1.93`. A **fresh navigation** then reported `data-motion="full"` on first paint with no interaction (the stored choice survives the reload), and a **new tab** rendered the **boot intro** — typed terminal text visible — and handed off on its own, which is the path that can never run under reduced motion. Activating the control the other way returned `data-motion="reduced"`, `1e-06s` durations, canvas unmounted, no element left stuck dim or displaced (the only sub-1 opacities were the hero's own decorative glows, and the only non-identity transforms were the cursor/spotlight nodes parked off-screen), and the other open tab followed on its own via the `storage` listener. Console clean in both tabs, every module 200; typecheck, lint and build all pass on this file set.
+    **Caveat on how it was measured:** the embedded preview tab reports `visibilityState: "hidden"`, so its animation clock and `requestAnimationFrame` are frozen and synthesized mouse/keyboard input is not delivered (a three-listener probe recorded zero events). The control was therefore activated with a dispatched DOM `click()` on the button — the same React handler a real click runs — and motion was measured by seeking each animation's timeline instead of watching the tab animate. Nothing was patched in the page to work around this, unlike item 13.
+17. **Three removals on request** — the navbar's sound button, the Skills "Details" panel and the timeline's certifications note are gone, along with everything that only existed to serve them (`SoundToggle.tsx`, the Web Audio graph, the `soundOn`/`soundOff` labels, the `Certification` interface and `certifications` array, and the skill-selection state). Verified on the live page: `header button` is now just the motion control and the mobile-menu toggle, with **no volume icon anywhere**; the skills section renders a single panel headed "Technology readout" holding **33 chips as plain `<li>` labels** (0 nested buttons — nothing pretends to be clickable), no "Details" heading and no proficiency note; and the word "certification" appears **nowhere in the rendered text**. The category filter still works — `All (33)` → `Databases (3)` narrows the readout to 3 chips in 1 group, then back to 33. All six sections, three timeline entries and three project cards are intact. Typecheck, lint and build pass; console clean on a fresh load; bundle **301.5 → 296.9 kB** now that the synthesiser is gone. The only console noise during the change was a one-off HMR 404 for the deleted `SoundToggle.tsx`, which does not recur after a reload.
+    **Measuring note:** the filter had to be exercised with motion suppressed. In this tab the exiting list's transition can never finish (the frozen `requestAnimationFrame` above), so `AnimatePresence mode="wait"` correctly keeps the old list mounted and the chip count appears not to change. With motion off — every duration 0 — the swap is observable and the counts above were taken that way.
 
 **Could not fully verify**
 
@@ -385,7 +405,7 @@ Section anchors changed, so **any link you had pointing at `#dossier`, `#arsenal
 - **Reduced motion is the default view on this machine, and it is only half-verifiable here.** This Windows host reports `prefers-reduced-motion: reduce`, so **the boot intro, the scroll reveals, the card tilt, the ambient drift and the shimmer are all invisible by default**. The static fallback itself is verified end-to-end (the page is complete and readable, which is the point of the fallback). Of the animated paths:
     - the **CSS** ones (ambient drift, shimmer, shine sweep) were verified by stripping the stylesheet's reduced-motion rule at runtime and confirming each keyframe changes `transform`;
     - the **Framer Motion** ones (boot intro, scroll reveals, tilt) are gated in React via `matchMedia`, which a stylesheet change cannot affect, so **they could not be exercised on this host at all**. Their duration/easing values were verified by reading them off the built output, not by watching them run.
-    **To actually see the animations, turn off Windows' "Animation effects" (Settings → Accessibility → Visual effects).** No product code was changed to work around this.
+    **Two ways to see the animations now.** The site ships an in-page control for exactly this case (item 16): the zap button in the navbar overrides the OS setting for this site alone and remembers the choice, so nothing system-wide has to change. Turning off Windows' "Animation effects" (Settings → Accessibility → Visual effects) also works and fixes it for every site at once.
 - **Third-party links were not followed.** The live-demo and repository URLs are shipped exactly as they appear in your source; the clicks above were intercepted before navigation so the external sites were not actually visited.
 
 ---
@@ -397,7 +417,6 @@ Section anchors changed, so **any link you had pointing at `#dossier`, `#arsenal
 3. **Two project categories were derived** for the filter (`Web Platform`, `AI / ML`). The source had no taxonomy; these follow the projects' own descriptions rather than adding new claims.
 4. **Interface copy is presentation, not biography.** Section titles ("About", "Skills", "Projects", "Experience", "Contact Me"), boot lines and button labels live in `ui` in the data file. They are clearly separated from your content. This is where you change wording without touching biography.
 5. **The "Focus: Backend · Cloud · Applied AI" line is derived, not authored.** It restates the three areas your own bio and CV timeline already name, and replaced a themed "Clearance LEVEL 4" that carried no real information.
-6. **Sound is opt-in and synthesised** — no audio assets, off by default.
 
 ## Known issues / trade-offs
 
@@ -406,3 +425,4 @@ Section anchors changed, so **any link you had pointing at `#dossier`, `#arsenal
 - Lighthouse reports a **forced reflow** insight (≈66 ms, credited to Framer Motion's layout measurement at load). It comes from the `layout`/`layoutId` animated transitions the brief requires and is a one-off cost at startup, not a per-interaction one — Performance is still 100/91 with it present.
 - The custom cursor hides the native one on hover-capable devices. This is the requested effect, but it is a divisive interaction; remove `<CustomCursor />` from `App.tsx` to restore the native pointer.
 - `prefers-reduced-motion` is honoured for all *decorative* motion; the spotlight cursor still tracks under reduced motion because it is a pointing affordance, not decoration. Drop it via the same line in `App.tsx` if you disagree.
+- The navbar's motion control deliberately lets a visitor override an accessibility preference, for this site only. That is a real trade-off, not an oversight: the OS setting is frequently inherited from an unrelated system option, an in-page control is the only way to say "not here", and the control names which of the two inputs is currently deciding. A visitor who never touches it keeps the reduced render.

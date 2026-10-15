@@ -119,14 +119,6 @@ export function Experience() {
             );
           })}
         </ol>
-
-        {portfolio.certifications.length === 0 && (
-          <Reveal className="mt-12">
-            <p className="rounded-xl border border-dashed border-gotham-600 p-4 font-mono text-[0.68rem] uppercase tracking-[0.2em] text-ash">
-              Certifications — none listed in the source content.
-            </p>
-          </Reveal>
-        )}
       </div>
     </section>
   );

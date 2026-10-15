@@ -13,7 +13,7 @@ interface BaseProps {
 }
 
 const base =
-  "relative inline-flex items-center justify-center gap-2 rounded-full font-display font-semibold uppercase tracking-[0.12em] transition-[transform,background-color,border-color,color,box-shadow] duration-300 will-change-transform active:translate-y-px disabled:pointer-events-none disabled:opacity-50 motion-safe:hover:-translate-y-0.5";
+  "relative inline-flex items-center justify-center gap-2 rounded-full font-display font-semibold uppercase tracking-[0.12em] transition-[transform,background-color,border-color,color,box-shadow] duration-300 will-change-transform active:translate-y-px disabled:pointer-events-none disabled:opacity-50 hover:-translate-y-0.5";
 
 const variants: Record<Variant, string> = {
   // Signal yellow on near-black gives ~12:1 contrast; the label uses the

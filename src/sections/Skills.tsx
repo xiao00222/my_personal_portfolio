@@ -11,9 +11,9 @@ import { portfolio, sectionById } from "@/data/portfolio";
 /**
  * Skills — a technical skills panel.
  *
- * Interaction: pick a category to filter, then hover or focus a technology to
- * read its detail. Keyboard users get the same detail via focus (the chips are
- * real buttons inside a labelled panel).
+ * Interaction: pick a category to filter, then read the technologies it lists.
+ * The chips are labels, not controls — there is no per-technology detail to
+ * reveal, so nothing pretends to be clickable.
  *
  * IMPORTANT: the source content contains no proficiency levels, so this panel
  * shows none — no invented percentages or progress bars. The only numbers shown
@@ -22,7 +22,6 @@ import { portfolio, sectionById } from "@/data/portfolio";
 export function Skills() {
   const reduced = usePrefersReducedMotion();
   const [activeCategory, setActiveCategory] = useState<string>("all");
-  const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
 
   const { skills } = portfolio;
   const section = sectionById.skills;
@@ -40,14 +39,6 @@ export function Skills() {
     [skills],
   );
 
-  const selected = useMemo(() => {
-    for (const category of skills) {
-      const item = category.items.find((entry) => entry.name === selectedSkill);
-      if (item) return { category, item };
-    }
-    return null;
-  }, [selectedSkill, skills]);
-
   return (
     <section
       id="skills"
@@ -61,7 +52,7 @@ export function Skills() {
           headingId="skills-heading"
           eyebrow={section.eyebrow}
           title={section.title}
-          description={`${totalModules} technologies across ${skills.length} categories. Pick a category to filter, then hover or focus a technology for details.`}
+          description={`${totalModules} technologies across ${skills.length} categories — filter by category to narrow the readout.`}
         />
 
         <div className="mt-14 grid gap-6 lg:grid-cols-[minmax(0,15rem)_1fr]">
@@ -93,103 +84,40 @@ export function Skills() {
           </Reveal>
 
           {/* Technologies */}
-          <div className="space-y-6">
-            <div className="panel rounded-2xl p-5 sm:p-6">
-              <h3 className="font-mono text-[0.66rem] uppercase tracking-[0.3em] text-steel">
-                Technology readout
-              </h3>
+          <div className="panel h-fit rounded-2xl p-5 sm:p-6">
+            <h3 className="font-mono text-[0.66rem] uppercase tracking-[0.3em] text-steel">
+              Technology readout
+            </h3>
 
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={activeCategory}
-                  initial={reduced ? { opacity: 1 } : { opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={reduced ? { opacity: 1 } : { opacity: 0, y: -8 }}
-                  transition={{ duration: reduced ? 0 : 0.28 }}
-                >
-                  {visibleCategories.map((category) => (
-                    <div key={category.id} className="mt-5">
-                      <p className="flex items-center gap-2 font-display text-sm uppercase tracking-[0.15em] text-signal">
-                        {category.label}
-                      </p>
-                      <p className="mt-1 text-xs text-ash">{category.blurb}</p>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeCategory}
+                initial={reduced ? { opacity: 1 } : { opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={reduced ? { opacity: 1 } : { opacity: 0, y: -8 }}
+                transition={{ duration: reduced ? 0 : 0.28 }}
+              >
+                {visibleCategories.map((category) => (
+                  <div key={category.id} className="mt-5">
+                    <p className="flex items-center gap-2 font-display text-sm uppercase tracking-[0.15em] text-signal">
+                      {category.label}
+                    </p>
+                    <p className="mt-1 text-xs text-ash">{category.blurb}</p>
 
-                      <ul className="mt-4 flex flex-wrap gap-2">
-                        {category.items.map((item) => {
-                          const isSelected = selectedSkill === item.name;
-                          return (
-                            <li key={item.name}>
-                              <button
-                                type="button"
-                                onMouseEnter={() => setSelectedSkill(item.name)}
-                                onFocus={() => setSelectedSkill(item.name)}
-                                onClick={() => setSelectedSkill(item.name)}
-                                aria-pressed={isSelected}
-                                className={cn(
-                                  "rounded-full border px-3.5 py-1.5 font-mono text-[0.7rem] uppercase tracking-wider transition-colors",
-                                  isSelected
-                                    ? "border-signal bg-signal text-gotham-950"
-                                    : "border-gotham-600 text-ash hover:border-signal hover:text-signal",
-                                )}
-                              >
-                                {item.name}
-                              </button>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    </div>
-                  ))}
-                </motion.div>
-              </AnimatePresence>
-            </div>
-
-            {/* Detail panel */}
-            <div
-              className="panel rounded-2xl p-5 sm:p-6"
-              aria-live="polite"
-              aria-atomic="true"
-            >
-              <h3 className="font-mono text-[0.66rem] uppercase tracking-[0.3em] text-steel">
-                Details
-              </h3>
-
-              {selected ? (
-                <dl className="mt-4 grid gap-3 sm:grid-cols-3">
-                  <div>
-                    <dt className="font-mono text-[0.62rem] uppercase tracking-[0.25em] text-ash">
-                      Technology
-                    </dt>
-                    <dd className="mt-1 font-display text-base uppercase tracking-wide text-signal">
-                      {selected.item.name}
-                    </dd>
+                    <ul className="mt-4 flex flex-wrap gap-2">
+                      {category.items.map((item) => (
+                        <li
+                          key={item.name}
+                          className="rounded-full border border-gotham-600 px-3.5 py-1.5 font-mono text-[0.7rem] uppercase tracking-wider text-ash transition-colors hover:border-signal hover:text-signal"
+                        >
+                          {item.name}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                  <div>
-                    <dt className="font-mono text-[0.62rem] uppercase tracking-[0.25em] text-ash">
-                      Category
-                    </dt>
-                    <dd className="mt-1 text-sm text-ink">{selected.category.label}</dd>
-                  </div>
-                  <div>
-                    <dt className="font-mono text-[0.62rem] uppercase tracking-[0.25em] text-ash">
-                      Note
-                    </dt>
-                    <dd className="mt-1 text-sm text-ink">
-                      {selected.item.note ?? "No additional note recorded."}
-                    </dd>
-                  </div>
-                </dl>
-              ) : (
-                <p className="mt-4 text-sm text-ash">
-                  Hover, focus, or select a technology to inspect it.
-                </p>
-              )}
-
-              <p className="mt-5 border-t border-gotham-700 pt-4 text-xs text-ash">
-                Proficiency levels are not shown because the source content does not
-                include them.
-              </p>
-            </div>
+                ))}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </div>

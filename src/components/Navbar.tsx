@@ -4,7 +4,7 @@ import { Menu, X } from "lucide-react";
 
 import { BatMotif } from "@/components/BatMotif";
 import { ButtonLink } from "@/components/Button";
-import { SoundToggle } from "@/components/SoundToggle";
+import { MotionToggle } from "@/components/MotionToggle";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
@@ -19,7 +19,13 @@ interface NavbarProps {
   activeId: string;
   ctaLabel: string;
   ctaId: string;
-  soundLabels: { on: string; off: string };
+  motionLabels: {
+    on: string;
+    off: string;
+    followsSystem: string;
+    chosenHere: string;
+    hint: string;
+  };
   labels: { menu: string; close: string };
 }
 
@@ -30,7 +36,7 @@ export function Navbar({
   activeId,
   ctaLabel,
   ctaId,
-  soundLabels,
+  motionLabels,
   labels,
 }: NavbarProps) {
   const [open, setOpen] = useState(false);
@@ -120,7 +126,13 @@ export function Navbar({
         </ul>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <SoundToggle onLabel={soundLabels.on} offLabel={soundLabels.off} />
+          <MotionToggle
+            onLabel={motionLabels.on}
+            offLabel={motionLabels.off}
+            followsSystemHint={motionLabels.followsSystem}
+            chosenHereHint={motionLabels.chosenHere}
+            hint={motionLabels.hint}
+          />
 
           <div className="hidden sm:block">
             <ButtonLink href={`#${ctaId}`} size="sm">
