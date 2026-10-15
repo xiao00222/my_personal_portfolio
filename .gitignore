@@ -1,10 +1,15 @@
 # Logs & local run artefacts
 *.log
 *.pid
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
 # Build output
 dist
 dist-ssr
+*.tsbuildinfo
 
 # Dependencies
 node_modules
@@ -18,12 +23,22 @@ node_modules
 .DS_Store
 Thumbs.db
 
-# Local env
+# Env files
 *.local
 .env
 .env.*
 !.env.example
 
-# Read by Vite for local, git-ignored overrides
-*.local.ts
+# Generated reports
+reports/
+
+# Test coverage
+coverage
+
+# Deploy tooling
+.vercel
+.netlify
+
+# AI / tool folders
+.freebuff
 README.md
